@@ -241,6 +241,22 @@ function verifyUser(username, password, callback) {
     const hashVerify = await bcrypt.hash(password, salt);
     return hash === hashVerify;
   }
+
+  // middleware that checks if the user session is authenticated, sends a 401 unauthorized error and its error page if not
+function isAuth(req, res, next) {
+    if (req.isAuthenticated()) {
+      next();
+    } else {
+      req.flash(
+        "error",
+        "You are not currently logged in. Please login first to access and edit your lists."
+      );
+      return res
+        .status(401)
+        .sendFile(__dirname + "/public/error-pages/not-authorized.html");
+    }
+  }
+  
   
   
   
