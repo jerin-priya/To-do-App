@@ -1,5 +1,7 @@
 require("dotenv").config();
 const express = require("express");
+const session = require("express-session");
+const mySQlStore = require("express-mysql-session")(session);
 const mysql = require("mysql");
 
 const app = express();
@@ -26,6 +28,15 @@ var connectionPool = mysql.createPool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
   });
+
+  // initiailize the sessionStore, which will allow express-mysql-session to store session data into the database
+const sessionStore = new mySQlStore(
+    {
+      createDatabaseTable: false,
+    },
+    connectionPool
+  );
+  
   
   // middleware to catch all other undefined routes, sends a 404 not found error and its error page
 app.use((req, res, next) => {
