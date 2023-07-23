@@ -1,0 +1,35 @@
+{
+  "name": "to-do-list",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jerin-priya/To-do-App.git"
+  },
+  "author": "Jerin Hasan Priya",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jerin-priya/To-do-App/issues"
+  },
+  "homepage": "https://github.com/jerin-priya/To-do-App#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-flash": "^0.1.1",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-mysql-session": "^3.0.0",
+    "express-session": "^1.17.3",
+    "jquery": "^3.7.0",
+    "jsonwebtoken": "^9.0.1",
+    "mysql": "^2.18.1",
+    "passport": "^0.6.0",
+    "passport-jwt": "^4.0.1",
+    "passport-local": "^1.0.0"
+  }
+}
