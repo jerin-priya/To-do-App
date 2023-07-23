@@ -1,0 +1,120 @@
+/* Reset default margin and padding for all elements */
+body,
+h1,
+h2,
+h3,
+p,
+ul,
+li {
+  margin: 0;
+  padding: 0;
+}
+
+/* Body background and font styles */
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(45deg, #ff4e50, #f9d423, #ffa07a);
+  color: #fff;
+}
+
+/* Center the title and icon */
+.title {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.title h1 {
+  font-size: 100px;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(227, 43, 43, 0.3);
+}
+
+.title h2 {
+  font-size: 24px;
+  margin-top: 10px;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.title img {
+  max-width: 100px;
+  margin-top: 20px;
+}
+
+/* Style the login and register buttons */
+.loginRegister {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.loginRegister a {
+  display: inline-block;
+  padding: 10px 20px;
+  margin: 5px;
+  font-size: 29px;
+  text-decoration: none;
+  background-color: #855050;
+  color: #ff4e50;
+  border-radius: 10px;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.loginRegister a:hover {
+  background-color: #ff4e50;
+  color: #221d1d;
+}
+
+/* Style the description section */
+.description {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px;
+  background-color: rgba(16, 15, 15, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.description h3 {
+  font-size: 36px;
+  margin-bottom: 10px;
+  color: #ff4e50;
+}
+
+.description p {
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.description ul {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+.description li {
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+/* Style the "Get Started Today!" section */
+.description h3:last-child {
+  margin-top: 40px;
+}
+
+/* Add background music controls */
+#music-player {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  color: #342d2d;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Responsive adjustments for smaller screens */
+@media screen and (max-width: 768px) {
+  .description {
+    padding: 20px;
+  }
+}

@@ -287,6 +287,31 @@ passport.deserializeUser((user, callback) => {
     });
   });
 
+  /************** MIDDLEWARE *********************/
+
+// stores session data into the database
+app.use(
+    session({
+      key: "myKey",
+      secret: "session_cookie_secret",
+      name: "mycookie",
+      store: sessionStore,
+      resave: false,
+      saveUninitialized: true,
+      cookie: {
+        maxAge: 6000000,
+      },
+    })
+  );
+  
+  // initializes Passport.js
+  app.use(passport.initialize());
+  // replaces session id in request object with user data pulled from deserialize user
+  app.use(passport.session());
+  // enable flash message system
+  app.use(flash());
+  
+
   /******************** ROUTES *******************/
 
 // displays app home page

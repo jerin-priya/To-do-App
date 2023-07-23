@@ -1,0 +1,157 @@
+/* Front Page Styling */
+
+html {
+  height: 100%;
+  font-family: "Arial", sans-serif;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-image: linear-gradient(120deg, #fadb5f, #ff8c42, #fadb5f);
+  background-size: 200% 200%;
+  animation: gradientAnimation 10s linear infinite;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+.login,
+.register {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin: 30px;
+}
+
+.loginContain,
+.registerContain {
+  width: 500px;
+}
+
+.loginBox,
+.registerBox {
+  background-color: #f5e5c4; /* Complementary color for yellow in the gradient */
+  padding: 30px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+  transition: transform 0.3s ease-in-out;
+  border-radius: 8px;
+}
+
+.loginBox:hover,
+.registerBox:hover {
+  transform: scale(1.05);
+}
+
+.loginBox h1,
+.registerBox h1 {
+  margin: 0;
+  font-size: 36px;
+  font-weight: bold;
+  text-align: center;
+  color: #333333;
+}
+
+.loginBox input,
+.registerBox input {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 16px;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #dddddd;
+  border-radius: 4px;
+}
+
+.loginBox a,
+.registerBox a {
+  display: block;
+  margin: 20px auto 15px;
+  color: #007bff;
+  text-decoration: none;
+  text-align: center;
+}
+
+.passwordContainer {
+  position: relative;
+}
+
+.newUser {
+  font-size: 16px;
+  color: #007bff;
+}
+
+#loginBtn,
+#registerBtn {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  background-color: #ff7043; /* Complementary color for orange in the gradient */
+  color: #ffffff;
+  border: none;
+  transition: background-color 0.3s ease-in-out;
+  cursor: pointer;
+  padding: 12px 20px;
+  font-size: 18px;
+  border-radius: 4px;
+}
+
+#loginBtn:hover,
+#registerBtn:hover {
+  background-color: #ff5733; /* Slightly darker shade of orange */
+  transform: translateY(-2px);
+}
+
+.dismissFlash {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 15px;
+  cursor: pointer;
+  transition: color 0.3s ease-in-out;
+  color: #555555;
+}
+
+.dismissFlash:hover {
+  color: #cc0000;
+}
+
+.dismissFlashError,
+.flashError {
+  border: 1px solid #cc0000;
+  color: #cc0000;
+  background-color: #ffd9d9;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 10px;
+  width: 100%;
+  text-align: center;
+}
+
+.dismissFlashMessage,
+.flashMessage {
+  border: 1px solid #00a000;
+  color: #00a000;
+  background-color: #d9ffd9;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 10px;
+  width: 100%;
+  text-align: center;
+}
+
+.flashError div,
+.flashMessage div {
+  word-wrap: break-word;
+}
+
+/* Additional custom styles can be added here */

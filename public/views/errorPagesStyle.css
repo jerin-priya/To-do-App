@@ -1,0 +1,40 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+    "Lucida Sans", Arial, sans-serif;
+}
+
+/********* ERROR DISPLAY STYLING ************/
+
+.title {
+  font-size: 60px;
+}
+
+.httpError {
+  color: gray;
+  font-weight: 100;
+}
+
+/************ REDIRECT LINK STYLING **************/
+
+.redirectLink {
+  text-decoration: none;
+  border: 1px solid black;
+  width: 150px;
+  margin: 15px auto 0px auto;
+  padding: 10px;
+  color: black;
+}
+
+.redirectLink:hover {
+  background-color: #eeeeee;
+}
