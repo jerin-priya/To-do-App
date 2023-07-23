@@ -4,6 +4,10 @@ const session = require("express-session");
 const mySQlStore = require("express-mysql-session")(session);
 const mysql = require("mysql");
 const bcrypt = require("bcryptjs");
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const jwt = require("jsonwebtoken");
+const passportJWT = require("passport-jwt");
 const flash = require("connect-flash");
 
 const app = express();
@@ -256,7 +260,32 @@ function isAuth(req, res, next) {
         .sendFile(__dirname + "/public/error-pages/not-authorized.html");
     }
   }
-  
+  /***************** PASSPORT.JS and WebToken *************************/
+
+// use the verifyUser function as a LocalStrategy for Passport.js authentication
+const strategy = new LocalStrategy(verifyUser);
+passport.use(strategy);
+const ExtractJwt = passportJWT.ExtractJwt;
+const JwtStrategy = passportJWT.Strategy;
+
+const jwtOptions = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: "process.env.SECRET_KEY", // Replace with your own secret key
+};
+
+// serialize user into browser's session
+passport.serializeUser((user, callback) => {
+  process.nextTick(() => {
+    return callback(null, { id: user.id, username: user.username });
+  });
+});
+
+// retrieve user from browser's session
+passport.deserializeUser((user, callback) => {
+    process.nextTick(() => {
+      return callback(null, user);
+    });
+  });
 
   /******************** ROUTES *******************/
 
@@ -308,6 +337,45 @@ app.get("/landing", isAuth, (req, res, next) => {
         });
       });
   });
+
+  app.get("/logout", (req, res, next) => {
+    req.logout((err) => {
+      if (err) {
+        next(err);
+      }
+      req.flash("message", "You are now logged out.");
+      res.redirect("/login");
+    });
+  });
+
+  app.post(
+    "/login",
+    passport.authenticate("local", {
+      failureRedirect: "/login",
+      failureFlash: true,
+      successRedirect: "/landing",
+    })
+  );
+
+  // registers a user
+app.post("/register", (req, res) => {
+    register(req.body.username, req.body.password, req.body.confirmPassword)
+      .then((response) => {
+        return res.send({
+          success: true,
+          body: response.body,
+        });
+      })
+      .catch((error) => {
+        return res.send({
+          success: false,
+          body: {
+            message: error.message,
+          },
+        });
+      });
+  });
+  
   
   
   
