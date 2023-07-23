@@ -260,6 +260,135 @@ function isAuth(req, res, next) {
         .sendFile(__dirname + "/public/error-pages/not-authorized.html");
     }
   }
+  function parseUserToDos(results, delimInner, delimOuter) {
+    return new Promise((resolve, reject) => {
+      let parsedToDos = [];
+      try {
+        for (let i = 0; i < results.length; i++) {
+          parsedToDos[i] = {};
+          parsedToDos[i].ID = results[i].ID;
+          parsedToDos[i].USER_ID = results[i].USER_ID;
+          parsedToDos[i].NAME = results[i].NAME;
+  
+          if (results[i].listToDos) {
+            // truthy statement
+            parsedToDos[i].listToDos = results[i].listToDos.split(delimOuter);
+  
+            for (let k = 0; k < parsedToDos[i].listToDos.length; k++) {
+              let listComponents = parsedToDos[i].listToDos[k].split(delimInner);
+              parsedToDos[i].listToDos[k] = {
+                todo_id: listComponents[0],
+                task: listComponents[1],
+                is_done: listComponents[2],
+              };
+            }
+          } else {
+            parsedToDos[i].listToDos = [];
+          }
+        }
+        resolve(parsedToDos);
+      } catch (error) {
+        reject(new Error(error.message));
+      }
+    });
+  }
+  // retrieves all the To-Dos of a user
+function getUserToDos(user_id, delimInner, delimOuter) {
+    return new Promise((resolve, reject) => {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          connection.release();
+          reject(new Error(err.message));
+        } else {
+          connection.query(
+            `SELECT lists.ID, lists.USER_ID, lists.NAME, GROUP_CONCAT(CONCAT(todos.ID, '${delimInner}', todos.TASK, '${delimInner}', todos.IS_DONE) SEPARATOR '${delimOuter}')
+                  AS listToDos FROM lists LEFT JOIN todos ON lists.ID = todos.LIST_ID WHERE USER_ID=? GROUP BY lists.ID`,
+            [user_id],
+            function (error, results, fields) {
+              if (error) {
+                reject(new Error(error.message));
+              } else {
+                parseUserToDos(results, delimInner, delimOuter)
+                  .then((response) => {
+                    resolve(response);
+                  })
+                  .catch((error) => {
+                    reject(new Error(error.message));
+                  });
+              }
+  
+              connection.release();
+            }
+          );
+        }
+      });
+    });
+  }
+
+  // inserts a new To-Do into the database
+function addToDo(task, list_id) {
+    return new Promise((resolve, reject) => {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          connection.release();
+          reject(new Error(err.message));
+        } else {
+          connection.query(
+            "INSERT INTO todos (TASK, IS_DONE, LIST_ID) VALUES (?, 0, ?)",
+            [task, list_id],
+            function (error, results, fields) {
+              if (error) {
+                reject(new Error(error.message));
+              } else {
+                resolve({
+                  body: {
+                    message: "To Do inserted successfully.",
+                    task: task,
+                    id: results.insertId,
+                  },
+                });
+              }
+  
+              connection.release();
+            }
+          );
+        }
+      });
+    });
+  }
+  
+  // removes a To-Do from the database
+  function removeToDo(todo_id) {
+    return new Promise((resolve, reject) => {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          connection.release();
+          reject(new Error(err.message));
+        } else {
+          connection.query(
+            "DELETE FROM todos WHERE ID=?",
+            [todo_id],
+            function (error, results, fields) {
+              if (error) {
+                reject(new Error(error.message));
+              } else {
+                resolve({
+                  body: {
+                    message: "ToDo successfully deleted",
+                    id: todo_id,
+                  },
+                });
+              }
+  
+              connection.release();
+            }
+          );
+        }
+      });
+    });
+  }
+  
+  
   /***************** PASSPORT.JS and WebToken *************************/
 
 // use the verifyUser function as a LocalStrategy for Passport.js authentication

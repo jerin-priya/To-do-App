@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <link rel="stylesheet" href="landingStyle.css" />
+  </head>
+  <body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script>
+    <script src="https://malsup.github.io/jquery.form.js"></script>
+
+    <!-- buttons for logging out and adding a new list -->
+    <div class="fixedButtons">
+      <input type="button" id="addList" value="New List" />
+      <a href="/logout" id="logoutBtn">Log out</a><br />
+    </div>
+
+    <!-- Popup for confirming the user's deletion of a list (can be turned off in settings) -->
+    <div id="overlay">
+      <div class="deleteListPopup">
+        You are about to delete this entire list. Are you sure you want to do
+        this?
+        <div class="popupButtons">
+          <input type="button" id="confirmDeleteList" value="Yes" />
+          <input type="button" id="undoDeleteList" value="No" />
+        </div>
+        <li>
+          <input
+            id="deleteListPopupPreference"
+            type="checkbox"
+            name="deleteListPopupPreference"
+          />
+          <label for="deleteListPopupPreference">Do not show this again.</label>
+        </li>
+      </div>
+    </div>
+
+    <!-- user's To-Do lists -->
+    <div class="toDos">
+      <!-- user's To-Do list data from the serverside is rendered onto page  -->
+      <% for (let i = 0; i < userToDos.length; i++) { %>
+      <!-- To-Do list -->
+      <div class="list" id="list<%=userToDos[i].ID%>">
+        <!-- list title and form for adding a To-Do -->
+        <input type="text" class="listTitle" value="<%=userToDos[i].NAME%>" />
+        <form action="/addToDo" method="POST" class="addToDoContain">
+          <input
+            type="text"
+            name="task"
+            placeholder="Todo"
+            class="addToDoInput"
+          />
+          <input type="submit" class="addToDoBtn" value="Add" />
+        </form>
+        <!-- ul displaying current To-Dos associated with this list -->
+        <ul class="taskList">
+          <% for (let k = 0; k < userToDos[i].listToDos.length; k++) { %>
+          <!-- a To-Do -->
+          <li id="task<%=userToDos[i].listToDos[k].todo_id%>">
+            <div class="toDoContain">
+              <% if (parseInt(userToDos[i].listToDos[k].is_done) === 1) { %>
+              <input
+                type="checkbox"
+                class="toDoCheckbox"
+                name="isDone"
+                checked
+              />
+              <label for="isDone" style="text-decoration: line-through"
+                ><%=userToDos[i].listToDos[k].task%></label
+              >
+              <% } else { %>
+              <input type="checkbox" class="toDoCheckbox" name="isDone" />
+              <label for="isDone" style="text-decoration: none"
+                ><%=userToDos[i].listToDos[k].task%></label
+              >
+              <% } %>
+            </div>
+            <!-- remove To-Do button -->
+            <input type="button" class="removeToDoBtn" value="×" />
+          </li>
+          <% } %>
+        </ul>
+        <!-- delete list button -->
+        <div class="deleteListContain">
+          <input type="button" class="deleteList" value="Delete" />
+        </div>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- div housing all flash messages -->
+    <div id="flashDiv">
+      <!-- display flash errors, if they exist, from the serverside -->
+      <% for (let i = 0; i < flashError.length; i++) { %>
+      <div class="flashError">
+        <div><%= flashError[i] %></div>
+        <input
+          type="button"
+          class="dismissFlash dismissFlashError"
+          value="Dismiss"
+        />
+      </div>
+      <% } %>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        let settings = {};
+
+        // retrieve all user settings from the serverside and store them in settings object
+        $.ajax({
+          type: "GET",
+          url: "/userSettings",
+          success: function (response) {
+            if (response.success) {
+              settings.showDeleteListPopup =
+                response.body.SHOW_DELETE_LIST_POPUP;
+              settings.fontFamily = response.body.FONT_FAMILY;
+              settings.theme = response.body.THEME;
+
+              $("body").addClass(settings.theme);
+              $("*").css("font-family", settings.fontFamily);
+            } else {
+              $("#flashDiv").append(
+                `<div class="flashError"><div>${response.body.message}</div><input type="button" class="dismissFlash dismissFlashError" value="Dismiss"></div>`
+              );
+            }
+          },
+          error: errorHandler,
+        });
+
+        // error handler for HTTP errors
+        function errorHandler(xhr) {
+          if (xhr.status === 401) {
+            location.href = "/login";
+          } else if (xhr.status === 404) {
+            document.body.innerHTML = xhr.responseText;
+          } else {
+            $("#flashDiv").append(
+              `<div class="flashError"><div>Something went wrong.</div><input type="button" class="dismissFlash dismissFlashError" value="Dismiss"></div>`
+            );
+          }
+        }
+
+        // updates title of a To-Do list
+        function updateListTitle(listTitle, list_id) {
+          $.ajax({
+            type: "POST",
+            url: "/updateListTitle",
+            data: {
+              id: list_id,
+              newTitle: listTitle,
+            },
+            success: function (response) {
+              if (!response.success) {
+                $("#flashDiv").append(
+                  `<div class="flashError"><div>${response.body.message}</div><input type="button" class="dismissFlash dismissFlashError" value="Dismiss"></div>`
+                );
+              }
+            },
+            error: errorHandler,
+          });
+        }
+
+        // deletes a To-Do list
+        function deleteList(div) {
+          $.ajax({
+            type: "POST",
+            url: "/deleteList",
+            data: {
+              id: div.attr("id").substring("list".length),
+            },
+            success: function (response) {
+              if (response.success) {
+                div.remove();
+              } else {
+                $("#flashDiv").append(
+                  `<div class="flashError"><div>${response.body.message}</div><input type="button" class="dismissFlash dismissFlashError" value="Dismiss"></div>`
+                );
+              }
+            },
+            error: errorHandler,
+          });
+        }
+
+        // updates user's delete list popup preference setting
+        function updateDeleteListPopupPreference(show_popup) {
+          $.ajax({
+            type: "POST",
+            url: "/changeUserDeleteListPopupPreference",
+            data: {
+              show_popup: show_popup,
+            },
+            success: function (response) {
+              if (response.success) {
+                settings.showDeleteListPopup = response.body.updated_show_popup;
+                if (response.body.updated_show_popup == 1) {
+                  $("#flashDiv").append(
+                    '<div class="flashMessage"><div>Popup enabled. You can always change your popup preferences in the Settings tab of your user profile.</div><input type="button" class="dismissFlash dismissFlashMessage" value="Dismiss"></div>'
+                  );
+                } else {
+                  $("#flashDiv").append(
+                    '<div class="flashMessage"><div>We will not show you this popup again! You can always change your popup preferences in the Settings tab of your user profile.</div><input type="button" class="dismissFlash dismissFlashMessage" value="Dismiss"></div>'
+                  );
+                }
+              } else {
+                $("#flashDiv").append(
+                  `<div class="flashError"><div>${response.body.message}</div><input type="button" class="dismissFlash dismissFlashError" value="Dismiss"></div>`
+                );
+              }
+            },
+            error: errorHandler,
+          });
+        }
+
+        // deletes flash message when its dismissal button is clicked
+        $(document).on("click", ".dismissFlash", function (e) {
+          e.preventDefault();
+          $(this).closest("div").remove();
+        });
+
+        // adds a To-Do when the addToDoBtn buttons are clicked
+        $(document).on("click", ".addToDoBtn", function (e) {
+          e.preventDefault();
+          let form = $(this).closest("form");
+
+          dataArray = form.serializeArray();
+          dataArray = dataArray.concat([
+            {
+              name: "list_id",
+              value: form.parent().attr("id").substring("list".length),
+            },
+          ]);
+
+          $.ajax({
+            type: "POST",
+            url: "/addToDo",
+            data: dataArray,
+            success: function (response) {
+              if (response.success) {
+                let task = $(`<li></li>"`).attr(
+                  "id",
+                  `task${response.body.id}`
+                );
+                let toDoContain = $("<div></div>").attr("class", "toDoContain");
+                toDoContain.append(
+                  '<input type="checkbox" class="toDoCheckbox" name="isDone">'
+                );
+                toDoContain.append(
+                  `<label for="isDone">${response.body.task}</label>`
+                );
+                task.append(toDoContain);
+                task.append(
+                  '<input type="button" class="removeToDoBtn" value="×">'
+                );
+                task.css("font-family", settings.fontFamily);
+
+                form.next(".taskList").append(task);
+              } else {
+                $("#flashDiv").append(
+                  `<div class="flashError"><div>${response.body.message}</div><input type="button" class="dismissFlash dismissFlashError" value="Dismiss"></div>`
+                );
+              }
+            },
+            error: errorHandler,
+          });
+        });
+
+        // adds a list when the #addList button is clicked
+        $(document).on("click", "#addList", function (e) {
+          e.preventDefault();
+          $.ajax({
+            type: "POST",
+            url: "/addList",
+            data: {
+              name: "Untitled",
+            },
+            success: function (response) {
+              if (response.success) {
+                let form = $("<form></form>")
+                  .attr("action", "/addToDo")
+                  .attr("method", "POST")
+                  .attr("class", "addToDoContain");
+                form.append(
+                  '<input type="text" name="task" placeholder="Todo" class="addToDoInput">'
+                );
+                form.append(
+                  '<input type="submit" class="addToDoBtn" value="Add">'
+                );
+
+                let div = $("<div></div>")
+                  .attr("class", "list")
+                  .attr("id", `list${response.body.id}`);
+                div.append(
+                  `<input type="text" class="listTitle" value="Untitled">`
+                );
+                div.append(form);
+                div.append('<ul class="taskList"></ul>');
+                div.append(
+                  '<div class="deleteListContain"><input type="button" class="deleteList" value="Delete"></div>'
+                );
+                div.css("font-family", settings.fontFamily);
+
+                $(".toDos").append(div);
+              } else {
+                $("#flashDiv").append(
+                  `<div class="flashError"><div>${response.body.message}</div><input type="button" class="dismissFlash dismissFlashError" value="Dismiss"></div>`
+                );
+              }
+            },
+            error: errorHandler,
+          });
+        });
+
+        // deletes a list when its deleteList button is clicked
+        $(document).on("click", ".deleteList", function (e) {
+          e.preventDefault();
+          let div = $(this).closest(".list");
+
+          if (settings.showDeleteListPopup == 1) {
+            $("#overlay").css("display", "flex");
+
+            $(document).on("click", "#confirmDeleteList", function (e) {
+              e.preventDefault();
+              $("#overlay").css("display", "none");
+              deleteList(div);
+
+              if ($("#deleteListPopupPreference").is(":checked")) {
+                updateDeleteListPopupPreference(0);
+              }
+            });
+
+            $(document).on("click", "#undoDeleteList", function (e) {
+              e.preventDefault();
+              $("#overlay").css("display", "none");
+
+              if ($("#deleteListPopupPreference").is(":checked")) {
+                updateDeleteListPopupPreference(0);
+              }
+            });
+          } else {
+            deleteList(div);
+          }
+        });
+
+        // removes a To-Do when its removeToDoBtn button is clicked
+        $(document).on("click", ".removeToDoBtn", function (e) {
+          e.preventDefault();
+          let li = $(this).closest("li");
+
+          $.ajax({
+            type: "POST",
+            url: "/removeToDo",
+            data: {
+              id: li.attr("id").substring("task".length),
+            },
+            success: function (response) {
+              if (response.success) {
+                li.remove();
+              } else {
+                $("#flashDiv").append(
+                  `<div class="flashError"><div>${response.body.message}</div><input type="button" class="dismissFlash dismissFlashError" value="Dismiss"></div>`
+                );
+              }
+            },
+            error: errorHandler,
+          });
+        });
+
+        // detects the checking/unchecking of a To-Do and sends an ajax POST request to update the database
+        $(document).on("change", ".toDoCheckbox", function (e) {
+          e.preventDefault();
+          let li = $(this).closest("li");
+
+          if (this.checked) {
+            $(this).next("label").css("text-decoration", "line-through");
+          } else {
+            $(this).next("label").css("text-decoration", "none");
+          }
+
+          $.ajax({
+            type: "POST",
+            url: "/updateToDoCheckbox",
+            data: {
+              id: li.attr("id").substring("task".length),
+              is_done: this.checked ? 1 : 0,
+            },
+            success: function (response) {
+              if (!response.success) {
+                $("#flashDiv").append(
+                  `<div class="flashError"><div>${response.body.message}</div><input type="button" class="dismissFlash dismissFlashError" value="Dismiss"></div>`
+                );
+              }
+            },
+            error: errorHandler,
+          });
+        });
+
+        // dropdown list opening and closing mechanism
+        $(document).on("click", ".dropdown", function (e) {
+          e.preventDefault();
+
+          if ($(".dropdown").hasClass("dropdownOpen")) {
+            $(".dropdown").removeClass("dropdownOpen");
+            $(".dropdownList").removeClass("dropdownOpen");
+            $(".dropdown").val("▼");
+          } else {
+            $(".dropdown").addClass("dropdownOpen");
+            $(".dropdownList").addClass("dropdownOpen");
+            $(".dropdown").val("▲");
+          }
+        });
+
+        // detects a 1 second pause after user types a list title, then sends an ajax POST request to update the database
+        let timeoutID;
+        $(document).on("input", ".listTitle", function (e) {
+          e.preventDefault();
+
+          clearTimeout(timeoutID);
+          timeoutID = setTimeout(() => {
+            updateListTitle(
+              $(this).val(),
+              $(this).closest("div").attr("id").substring("list".length)
+            );
+          }, 1000);
+        });
+      });
+    </script>
+  </body>
+</html>
