@@ -170,6 +170,77 @@ async function genPassword(password) {
       hash: hash,
     };
   }
+
+  // inserts default settings into the database for a new user
+function insertSettings(user_id) {
+    return new Promise((resolve, reject) => {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          connection.release();
+          reject(new Error(err.message));
+        } else {
+          connection.query(
+            `INSERT INTO settings (USER_ID, SHOW_DELETE_LIST_POPUP, FONT_FAMILY, THEME) VALUES (?, 1, "\'Trebuchet MS\'\, \'Lucida Sans Unicode\'\, \'Lucida Grande'\, \'Lucida Sans\'\, Arial\, sans-serif", "Standard")`,
+            [user_id],
+            function (error, results, fields) {
+              if (error) {
+                reject(new Error(error.message));
+              } else {
+                resolve({
+                  message: "Setting successfully inserted",
+                  setting_id: results.insertId,
+                });
+              }
+  
+              connection.release();
+            }
+          );
+        }
+      });
+    });
+  }
+  
+  // verifies the login credentials of a user
+function verifyUser(username, password, callback) {
+    findUser(username)
+      .then((response) => {
+        if (response.length === 0) {
+          return callback(null, false, {
+            message: "Incorrect username or password.",
+          });
+        } else {
+          verifyPassword(password, response[0].SALT, response[0].HASH)
+            .then((verified) => {
+              if (verified) {
+                const user = {
+                  id: response[0].ID,
+                  username: response[0].USERNAME,
+                  hash: response[0].HASH,
+                  salt: response[0].SALT,
+                };
+  
+                return callback(null, user);
+              } else {
+                return callback(null, false, {
+                  message: "Incorrect username or password.",
+                });
+              }
+            })
+            .catch((error) => {
+              return callback(error);
+            });
+        }
+      })
+      .catch((error) => {
+        return callback(error);
+      });
+  }
+  
+  // compares the hash stored in the database to the hash generated with the user-entered password
+  async function verifyPassword(password, salt, hash) {
+    const hashVerify = await bcrypt.hash(password, salt);
+    return hash === hashVerify;
+  }
   
   
   
