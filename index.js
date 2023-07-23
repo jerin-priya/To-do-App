@@ -95,6 +95,82 @@ function userExists(username) {
         });
     });
   }
+
+  // retrieves user data by username, returns empty array if user does not exist
+function findUser(username) {
+    return new Promise((resolve, reject) => {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          connection.release();
+          reject(new Error(err.message));
+        } else {
+          connection.query(
+            "SELECT * FROM users WHERE USERNAME=?",
+            username,
+            function (error, results, fields) {
+              if (error) {
+                reject(new Error(error.message));
+              } else {
+                resolve(results);
+              }
+  
+              connection.release();
+            }
+          );
+        }
+      });
+    });
+  }
+
+  // inserts a user into the database
+function insertUser(username, password) {
+    return new Promise((resolve, reject) => {
+      genPassword(password)
+        .then((response) => {
+          const salt = response.salt;
+          const hash = response.hash;
+  
+          connectionPool.getConnection((err, connection) => {
+            if (err) {
+              connection.release();
+              reject(new Error(err.message));
+            } else {
+              connection.query(
+                "INSERT INTO users (USERNAME, HASH, SALT, IS_ADMIN) VALUES (?, ?, ?, 0)",
+                [username, hash, salt],
+                function (error, results, fields) {
+                  if (error) {
+                    reject(new Error(error.message));
+                  } else {
+                    resolve({
+                      message: "User successfully inserted",
+                      user_id: results.insertId,
+                    });
+                  }
+  
+                  connection.release();
+                }
+              );
+            }
+          });
+        })
+        .catch((error) => {
+          reject(new Error(error.message));
+        });
+    });
+  }
+
+  // generates a random salt to hash a user password, returns the salt and the hashed password
+async function genPassword(password) {
+    let salt = await bcrypt.genSalt();
+    let hash = await bcrypt.hash(password, salt);
+  
+    return {
+      salt: salt,
+      hash: hash,
+    };
+  }
+  
   
   
   
