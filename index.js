@@ -479,6 +479,69 @@ function addList(name, user_id) {
       });
     });
   }
+
+  // updates the title of a list
+function updateListTitle(list_id, newTitle) {
+    return new Promise((resolve, reject) => {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          connection.release();
+          reject(new Error(err.message));
+        } else {
+          connection.query(
+            "UPDATE lists SET NAME=? WHERE ID=?",
+            [newTitle, list_id],
+            function (error, results, fields) {
+              if (error) {
+                reject(new Error(error.message));
+              } else {
+                resolve({
+                  body: {
+                    message: "List title successfully updated.",
+                    id: list_id,
+                  },
+                });
+              }
+  
+              connection.release();
+            }
+          );
+        }
+      });
+    });
+  }
+  // updates a user's delete list popup preference
+function changeUserDeleteListPopupPreference(user_id, show_popup) {
+    return new Promise((resolve, reject) => {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          connection.release();
+          reject(new Error(err.message));
+        } else {
+          connection.query(
+            "UPDATE settings SET SHOW_DELETE_LIST_POPUP=? WHERE USER_ID=?",
+            [show_popup, user_id],
+            function (error, results, fields) {
+              if (error) {
+                reject(new Error(error.message));
+              } else {
+                resolve({
+                  body: {
+                    message:
+                      "User delete list popup preference successfully updated",
+                    updated_show_popup: show_popup,
+                  },
+                });
+              }
+  
+              connection.release();
+            }
+          );
+        }
+      });
+    });
+  }
+
   
   /***************** PASSPORT.JS and WebToken *************************/
 
@@ -622,6 +685,43 @@ app.post("/register", (req, res) => {
   });
   
   
+// adds a To-Do to the database (protected route)
+app.post("/addToDo", isAuth, (req, res) => {
+    addToDo(req.body.task, req.body.list_id)
+      .then((response) => {
+        return res.send({
+          success: true,
+          body: response.body,
+        });
+      })
+      .catch((error) => {
+        return res.send({
+          success: false,
+          body: {
+            message: error.message,
+          },
+        });
+      });
+  });
+
+// adds a list to the database (protected route)
+app.post("/addList", isAuth, (req, res) => {
+    addList(req.body.name, req.user.id)
+      .then((response) => {
+        return res.send({
+          success: true,
+          body: response.body,
+        });
+      })
+      .catch((error) => {
+        return res.send({
+          success: false,
+          body: {
+            message: error.message,
+          },
+        });
+      });
+  });
   
   
   
