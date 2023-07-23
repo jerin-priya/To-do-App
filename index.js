@@ -722,6 +722,29 @@ app.post("/addList", isAuth, (req, res) => {
         });
       });
   });
+
+
+// removes a To-Do from the database (protected route)
+app.post("/removeToDo", isAuth, (req, res) => {
+    removeToDo(req.body.id)
+      .then((response) => {
+        return res.send({
+          success: true,
+          body: response.body,
+        });
+      })
+      .catch((error) => {
+        return res.send({
+          success: false,
+          body: {
+            message: error.message,
+          },
+        });
+      });
+  });
+  
+
+  
   
   
   
