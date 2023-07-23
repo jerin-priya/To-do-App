@@ -387,7 +387,98 @@ function addToDo(task, list_id) {
       });
     });
   }
+  // inserts a new list into the database
+function addList(name, user_id) {
+    return new Promise((resolve, reject) => {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          connection.release();
+          reject(new Error(err.message));
+        } else {
+          connection.query(
+            "INSERT INTO lists (NAME, USER_ID) VALUES (?, ?)",
+            [name, user_id],
+            function (error, results, fields) {
+              if (error) {
+                reject(new Error(error.message));
+              } else {
+                resolve({
+                  body: {
+                    message: "List sucessfully inserted.",
+                    id: results.insertId,
+                  },
+                });
+              }
   
+              connection.release();
+            }
+          );
+        }
+      });
+    });
+  }
+  
+  // deletes a list from the database
+  function deleteList(list_id) {
+    return new Promise((resolve, reject) => {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          connection.release();
+          reject(new Error(err.message));
+        } else {
+          connection.query(
+            "DELETE FROM lists WHERE ID=?",
+            [list_id],
+            function (error, results, fields) {
+              if (error) {
+                reject(new Error(error.message));
+              } else {
+                resolve({
+                  body: {
+                    message: "List successfully deleted.",
+                    id: list_id,
+                  },
+                });
+              }
+  
+              connection.release();
+            }
+          );
+        }
+      });
+    });
+  }
+  
+  // updates the status of a To-Do checkbox (done or not?)
+  function updateToDoCheckbox(todo_id, is_done) {
+    return new Promise((resolve, reject) => {
+      connectionPool.getConnection((err, connection) => {
+        if (err) {
+          connection.release();
+          reject(new Error(err.message));
+        } else {
+          connection.query(
+            "UPDATE todos SET IS_DONE=? WHERE ID=?",
+            [is_done, todo_id],
+            function (error, results, fields) {
+              if (error) {
+                reject(new Error(error.message));
+              } else {
+                resolve({
+                  body: {
+                    message: "ToDo checkbox successfully updated.",
+                    id: todo_id,
+                  },
+                });
+              }
+  
+              connection.release();
+            }
+          );
+        }
+      });
+    });
+  }
   
   /***************** PASSPORT.JS and WebToken *************************/
 
