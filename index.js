@@ -257,6 +257,59 @@ function isAuth(req, res, next) {
     }
   }
   
+
+  /******************** ROUTES *******************/
+
+// displays app home page
+app.get("/", (req, res, next) => {
+    res.sendFile(__dirname + "/public/index.html");
+  });
+
+  // renders login page
+app.get("/login", (req, res, next) => {
+    let flashError = req.flash("error");
+    let flashMessage = req.flash("message");
+    res.render("login.ejs", {
+      flashError: flashError,
+      flashMessage: flashMessage,
+    });
+  });
+
+  // renders login page
+app.get("/login", (req, res, next) => {
+  let flashError = req.flash("error");
+  let flashMessage = req.flash("message");
+  res.render("login.ejs", {
+    flashError: flashError,
+    flashMessage: flashMessage,
+  });
+});
+
+// displays register page
+app.get("/register", (req, res, next) => {
+    res.sendFile(__dirname + "/public/register.html");
+  });
+
+  // renders user landing page (protected route)
+app.get("/landing", isAuth, (req, res, next) => {
+    getUserToDos(req.user.id, "␜", "␝")
+      .then((response) => {
+        return res.render("landing.ejs", {
+          flashError: [],
+          userToDos: response,
+          username: req.user.username,
+        });
+      })
+      .catch((error) => {
+        return res.render("landing.ejs", {
+          flashError: [error.message],
+          userToDos: [],
+          username: req.user.username,
+        });
+      });
+  });
+  
+  
   
   
   
