@@ -3,6 +3,8 @@ const express = require("express");
 const session = require("express-session");
 const mySQlStore = require("express-mysql-session")(session);
 const mysql = require("mysql");
+const bcrypt = require("bcryptjs");
+const flash = require("connect-flash");
 
 const app = express();
 app.use(express.json());
@@ -36,6 +38,64 @@ const sessionStore = new mySQlStore(
     },
     connectionPool
   );
+
+  /******************** FUNCTIONS *********************/
+
+// registers a user in the database and gives them default settings
+function register(username, password, confirmPassword) {
+    return new Promise((resolve, reject) => {
+      if (password != confirmPassword) {
+        reject(new Error("Passwords need to match."));
+      } else {
+        userExists(username)
+          .then((response) => {
+            if (response) {
+              reject(new Error(`This user already exists.`));
+            } else {
+              insertUser(username, password)
+                .then((response) => {
+                  insertSettings(response.user_id)
+                    .then(() => {
+                      resolve({
+                        body: {
+                          message: `Successfully registered.`,
+                        },
+                      });
+                    })
+                    .catch((error) => {
+                      reject(new Error(error.message));
+                    });
+                })
+                .catch((error) => {
+                  reject(new Error(error.message));
+                });
+            }
+          })
+          .catch((error) => {
+            reject(new Error(error.message));
+          });
+      }
+    });
+  }
+
+
+  // check if a user already exists in the database
+function userExists(username) {
+    return new Promise((resolve, reject) => {
+      findUser(username)
+        .then((response) => {
+          if (response.length > 0) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        })
+        .catch((error) => {
+          reject(new Error(error.message));
+        });
+    });
+  }
+  
   
   
   // middleware to catch all other undefined routes, sends a 404 not found error and its error page
